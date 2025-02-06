@@ -23,6 +23,26 @@ for c in chara_ind:
     texto = texto.replace(c, "")
 
 conjunto_texto = texto.split("\n")
+palavras = []
+
+#Edição feita 31/01/2025
+
+for linha in conjunto_texto:
+    conjunto_palavras = linha.split()
+    for palavra in conjunto_palavras:
+        palavra = palavra.lower()
+        for i in range(len(palavras) + 1):
+            if i == len(palavras):
+                palavras.append([palavra, 1])
+                break
+            if palavras[i][0] == palavra:
+                palavras[i][1] += 1
+                break
+
+palavras = sorted(palavras, key= lambda x: x[1], reverse = True)
+print(palavras)
+
+'''
 palavras = dict()
 
 for linha in conjunto_texto:
@@ -42,3 +62,5 @@ for pos, qtd in palavras.items():
         maior = qtd
 
 print(f"{par[0]} {par[1]}")
+'''
+

@@ -43091,7 +43091,33 @@ for linha in conjunto_dados:
     if contador % 430 == 0:
         porcentagem += 1
         print(f"{porcentagem}% concluido")
-    
+
+porcentagem = 0
+for x in range(len(Nota_10)):
+    for pos in range(len(Nota_10) - 1):
+        if Nota_10[pos][5] < Nota_10[pos +1][5]:
+            inter = Nota_10[pos + 1]
+            Nota_10[pos +1] = Nota_10[pos]
+            Nota_10[pos] = inter
+    for pos in range(len(Nota_10) - 1):
+        if Nota_10[pos][5] == Nota_10[pos +1][5] and Nota_10[pos][1] < Nota_10[pos +1][1]:
+            inter = Nota_10[pos + 1]
+            Nota_10[pos +1] = Nota_10[pos]
+            Nota_10[pos] = inter
+    if x % 2070 == 0:
+        porcentagem += 10
+        print(f"{porcentagem}% concluido")
+
+for pos in range(10):
+    print(f"Aluno: {Nota_10[pos][0]}, Nota final: {Nota_10[pos][5]}")
+media = 0 
+for pos in range(20):
+    media += Nota_10[pos][5]
+
+media /= 20
+
+print(f"Media: {media}")
+
 '''
 candidatos = dados.replace(".",".").split("\n")
 
@@ -43107,5 +43133,3 @@ for aprovado in aprovados:
     print(aprovado[1])
     print(aprovado[6])
 '''
-
-print(Nota_10)

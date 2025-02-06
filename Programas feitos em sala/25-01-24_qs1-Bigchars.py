@@ -29,24 +29,12 @@ bigchars = [
 #lista fins =[numereos inteiros cada posição é o maior fim da letra, em ordem alfabetica]
 #print(len(bigchars[0]))
 
-'''
-for i in bigchars:
-    for a in i:
-        if a == "A" and :
-            print(a)
-
-
-
-for pos in range(16):
-    bigchars[pos].find(nome[])
-for linha in bigchars:
-    '''
 nome = "Joao"
-inicios = []
-fins = []
-print(nome.upper())
+indexs = {}
+caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-for letra in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789":
+
+for letra in caracteres:
     maior_fim = -1
     menor_inicio = 1000
     for linha in bigchars:
@@ -56,17 +44,12 @@ for letra in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789":
         fim = linha.rfind(letra)
         if fim > maior_fim:
             maior_fim = fim
-    inicios.append(menor_inicio)
-    fins.append(maior_fim)
-'''
-for letra in nome:
-    for linha in bigchars:
-        print(linha[inicios[ord(letra.Upper()) - ord("A")], fins[ord(letra.Upper()) - ord("A")])
-'''
-
-#Edição feita dia 28/01/025
+    indexs[letra] = [menor_inicio, maior_fim]
 
 for linha in bigchars:
     for letra in nome.upper():
-        print(linha[inicios[ord(letra) - ord("A")]: fins[ord(letra) - ord("A")] + 1], end = " ")
+        print(linha[indexs[letra][0]: indexs[letra][1] +1], end = " ")
     print(" ")
+
+
+#Edição feita 31/01/2025
