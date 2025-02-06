@@ -9,5 +9,3 @@ print(l) ---- [3, "joao", 4.5, 6]
 
 print(l[1][1;3]) elementos 1,2 do segundo elementos da lista l
 l[1] = [5,6]
-
-#thi f* is lambda
