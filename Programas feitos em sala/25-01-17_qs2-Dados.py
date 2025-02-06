@@ -1,4 +1,4 @@
-#
+#listar todas as pessoas que tem a soma das notas maior que 10 e que nenhuma delas seja menor do que 2
 
 dados = '''
 0718730-0;AABAN VASCONCELOS ZYZZYAG;3;3;1,5;10
@@ -43064,8 +43064,48 @@ dados = '''
 0625370-9;ZULMIRA GOMES DE ARAUJO;1,5;3,75;0,75;8,75
 '''
 
-lista_dados = dados.split('\n')
-cond = lambda x: 'JULIANA' in x
-print(list(filter(cond, lista_dados)))
+conjunto_dados = dados.split('\n')
+Nota_10 = []
+contador = 0
+porcentagem = 0
 
-print (len(dados.split('\n')))
+for linha in conjunto_dados:
+    primeiro = linha.find(";")
+    segundo = linha.find(";", primeiro + 1)
+    terceiro = linha.find(";", segundo + 1)
+    quarto = linha.find(";", terceiro + 1)
+    quinto = linha.find(";", quarto + 1)
+    soma = 0
+    if primeiro > -1 and segundo > -1 and terceiro > -1 and quarto > -1 and quinto > -1:
+        partes =[linha[segundo + 1: terceiro], linha[terceiro + 1: quarto], linha[quarto + 1: quinto], linha[quinto + 1:]]
+        ind = 0
+        for n in partes:
+            n = n.replace(",",".")
+            partes[ind] = float(n)
+            ind += 1
+            soma += float(n)
+        if soma > 10 and partes[0] >= 2 and partes[1] >= 2 and partes[2] >= 2 and partes[3] >= 2:
+            Nota_10.append([linha[primeiro +1: segundo], partes[0], partes[1], partes[2], partes[3], soma])
+    
+    contador += 1
+    if contador % 430 == 0:
+        porcentagem += 1
+        print(f"{porcentagem}% concluido")
+    
+'''
+candidatos = dados.replace(".",".").split("\n")
+
+dados_tratados = []
+for candidato in candidatos:
+    candidato = candidato.split(";")
+    for pos in range(2,6)
+        candidato[pos] = float(candidato[pos])
+    candidatos.append(sum(candidato[1:5]))
+    dados_tratados.append(candidato)
+aprovados = filte(lambda x: x[2] >= 2 and x[3] >= 2 and x[4] >= 2 and x[5] >= 2 and x[6] >=10, dados_tratados)
+for aprovado in aprovados:
+    print(aprovado[1])
+    print(aprovado[6])
+'''
+
+print(Nota_10)

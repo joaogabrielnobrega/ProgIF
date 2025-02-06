@@ -41,7 +41,10 @@ for pos in range(16):
     bigchars[pos].find(nome[])
 for linha in bigchars:
     '''
-nome = "A"
+nome = "Joao"
+inicios = []
+fins = []
+print(nome.upper())
 
 for letra in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789":
     maior_fim = -1
@@ -54,8 +57,16 @@ for letra in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789":
         if fim > maior_fim:
             maior_fim = fim
     inicios.append(menor_inicio)
-    fim.append(maior_fim)
-
+    fins.append(maior_fim)
+'''
 for letra in nome:
     for linha in bigchars:
-        print(linha[inicios[ord(letra) - ord("A")], fins[ord(letra) - ord("A")])
+        print(linha[inicios[ord(letra.Upper()) - ord("A")], fins[ord(letra.Upper()) - ord("A")])
+'''
+
+#Edição feita dia 28/01/025
+
+for linha in bigchars:
+    for letra in nome.upper():
+        print(linha[inicios[ord(letra) - ord("A")]: fins[ord(letra) - ord("A")] + 1], end = " ")
+    print(" ")

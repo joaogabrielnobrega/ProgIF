@@ -24,14 +24,13 @@ for c in chara_ind:
 
 conjunto_texto = texto.split("\n")
 palavras = dict()
-print(conjunto_texto)
 
 for linha in conjunto_texto:
     conjunto_palavras = linha.split()
     for palavra in conjunto_palavras:
         palavra = palavra.lower()
         palavras[palavra] = palavras.get(palavra, 0) + 1
-        
+
 print(palavras)
 
 maior = 0
