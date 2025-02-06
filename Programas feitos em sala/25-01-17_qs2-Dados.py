@@ -43092,6 +43092,11 @@ for linha in conjunto_dados:
         porcentagem += 1
         print(f"{porcentagem}% concluido")
 
+Nota_10 = Nota_10.sort(key= lambda aluno: aluno[5])
+print(Nota_10)
+
+
+'''
 porcentagem = 0
 for x in range(len(Nota_10)):
     for pos in range(len(Nota_10) - 1):
@@ -43117,7 +43122,7 @@ for pos in range(20):
 media /= 20
 
 print(f"Media: {media}")
-
+'''
 '''
 candidatos = dados.replace(".",".").split("\n")
 
@@ -43133,3 +43138,4 @@ for aprovado in aprovados:
     print(aprovado[1])
     print(aprovado[6])
 '''
+
