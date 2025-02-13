@@ -11,28 +11,68 @@
 
 
 fd = open("apache_logs.txt", "r")
-respostas_data = open("respostas_data.txt", "w")
+resposta_data = open("resposta_data.txt", "w")
 pedidos_horaMinuto = dict()
 respostas = dict()
+datas = dict()
+diaHora = dict()
+ips = dict()
 
 for linha in fd:
     seguementos = linha.split()
-    #print(seguementos[3])
-    hora_minuto = seguementos[3].split(":")[1] + seguementos[3].split(":")[2]
-    #print(hora_minuto)
+    hora_minuto = seguementos[3].split(":")[1] + ":" + seguementos[3].split(":")[2]
+    pos1Data = linha.find("[")
+    pos2Data = linha.find(":")
     if hora_minuto not in pedidos_horaMinuto: pedidos_horaMinuto[hora_minuto] = 1
     else: pedidos_horaMinuto[hora_minuto] += 1
     if seguementos[8] not in respostas: respostas[seguementos[8]] = 1
     else: respostas[seguementos[8]] += 1
-x = list()
-for a, b in pedidos_horaMinuto.items():
-    x.append((a, b))
-x.sort(reversed = True, key = lambda v: v[1])
-print(x)
-print(pedidos_horaMinuto)
-print(respostas)
+    if linha[pos1Data +1 :pos2Data] not in datas: datas[linha[pos1Data +1 :pos2Data]] = 1
+    else: datas[linha[pos1Data +1 :pos2Data]] += 1
+    if linha[pos1Data +1 :pos2Data + 3] not in diaHora: diaHora[linha[pos1Data +1 :pos2Data + 3]] = 1
+    else: diaHora[linha[pos1Data +1 :pos2Data + 3]] += 1
+    if linha[pos1Data +1 :pos2Data] not in ips: ips[linha[pos1Data +1 :pos2Data]] = {seguementos[0]: 1}
+    elif seguementos[0] not in ips[linha[pos1Data +1 :pos2Data]]: ips[linha[pos1Data +1 :pos2Data]][seguementos[0]] = 1
+    else: ips[linha[pos1Data +1 :pos2Data]][seguementos[0]] += 1
 
+dia_hora = []
+for a, b in diaHora.items():
+    dia_hora.append((a, b))
+diaHora = sorted(dia_hora, key = lambda x: x[1], reverse = True)
 
+print("Pedidos por hora: ", pedidos_horaMinuto) #Q1
+print("Dia/hora com mais pedidos: ", diaHora[0][0]) #Q2
+print("Respostas: ", respostas) #Q3 Falta o grafico
+
+for a in datas: #Q4
+    resposta_data.write(f"{a}: {datas[a]}\n")
+
+print("ips por dia", ips)#Q5
+listaIps = []
+for a in ips:
+    print(len(ips[a]))
+    for x, y in ips[a].items():
+        listaIps.append([a])
+    
+
+'''
+ips_dia = {}
+for d in datas.keys():
+    print(d)
+    if d not in ips_dia:
+        ips_dia[d] 
+    else:
+        for b in ips_dia:
+            if d == 
+
+for a, b in ips:
+''' 
+
+'''
+for i in range(len(datas)):
+    if 
+for a, b in ips.items():
+'''
 
 fd.close()
-respostas_data.close()
+resposta_data.close()

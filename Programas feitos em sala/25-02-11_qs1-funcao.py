@@ -1,22 +1,24 @@
 #
 #   Project euler 21
 #
+import datetime
 
 def d(n):
-    soma = 0
-    for i in range(1, n):
-        if n % i == 0:
+    soma = 1
+    for i in range(2, n //2 +1):
+        if n % i == 0 :
             soma += i
     return soma
 
-pares = []
+start = datetime.datetime.now()
 soma = 0
 
 for n in range(1, 10000):
     pair = d(n)
-    if [pair, n] not in pares and d(n) == pair and d(pair) == n:
-        pares.append([n, pair])
-        soma += n + pair
+    if d(pair) == n and n != pair:
+        soma += n
 
-print(f"Numeros amigaveis: {pares}")
 print(f"Soma dos numeros amigaveis: {soma}")
+
+end = datetime.datetime.now()
+print(end - start)
