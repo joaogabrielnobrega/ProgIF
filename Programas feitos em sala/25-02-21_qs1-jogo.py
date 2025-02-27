@@ -2,10 +2,49 @@
 #https://www.pygame.org/docs/tut/newbieguide.html?highlight=collidepoint
 #   Jogo Space invaders
 
-
 import pygame
 import datetime
 from random import randint
+
+## EM TESTE
+#https://stackoverflow.com/questions/64095396/detecting-collisions-between-polygons-and-rectangles-in-pygame
+#https://stackoverflow.com/questions/59553156/pygame-detecting-collision-of-a-rotating-rectangle/59553589#59553589
+#https://www.mathcentre.ac.uk/resources/uploaded/mc-ty-scalarprod-2009-1.pdf
+#https://stackoverflow.com/questions/10002918/what-is-the-need-for-normalizing-a-vector
+#
+def collisionLineLine(l1_p1, l1_p2, l2_p1, l2_p2):
+    
+    p = pygame.math.Vector2(l1_p1)
+    print(p, "p")
+    l1_vec = pygame.math.Vector2(l1_p2) - p
+    print(l1_vec,"l1_vec")
+    r = l1_vec.normalize()
+    print(r,'r')
+    q = pygame.math.Vector2(l2_p1)
+    print(q,'q')
+    l2_vec = pygame.math.Vector2(l2_p2) - q
+    print(l2_vec, 'l2_vec')
+    s = l2_vec.normalize()
+    print(s, 's')
+    
+    rnv = pygame.math.Vector2(r[1], -r[0])
+    print(rnv,'rnv')
+    snv = pygame.math.Vector2(s[1], -s[0])
+    print(snv,'snv')
+    
+    qp = q - p
+    print(qp, 'qp')
+    t = qp.dot(s[1], -s[0]) / r.dot(s[1], -s[0])
+    print(t,'t')
+    t2 = qp.dot(snv) / r.dot(snv)
+    print(t2, 't2')
+    u = qp.dot(r[1], -r[0]) / r.dot(s[1], -s[0])
+    print(u,'u')
+    u2 = qp.dot(rnv) / r.dot(snv)
+    print(u2, 'u2')
+    
+
+
 
 ## Função de colisão
 '''
@@ -28,10 +67,12 @@ def collision(pos1, size1, pos2, size2):
 def playerControls():
     pygame.draw.circle(display, "red", (player["pos"]["x"], player["pos"]["y"]), 20)
     keys = pygame.key.get_pressed()
+    #if not player["pos"]["y"] < (player['size'][1] // 2) or not player["pos"]["y"] > display.get_height() - (player['size'][1] // 2):
     if keys[pygame.K_w]:
         player["pos"]["y"] -= 300 * dt
     if keys[pygame.K_s]:
         player["pos"]["y"] += 300 * dt
+    #if not player["pos"]["x"] < (player['size'][0] // 2) or not player["pos"]["x"] > display.get_width() - (player['size'][0] // 2):
     if keys[pygame.K_a]:
         player["pos"]["x"] -= 300 * dt
     if keys[pygame.K_d]:
@@ -47,7 +88,7 @@ def playerControls():
         player["pos"]["y"] = (player['size'][1] // 2)
     elif player["pos"]["y"] > display.get_height() - (player['size'][1] // 2):
         player["pos"]["y"] = display.get_height() - (player['size'][1] // 2)
-    
+    return
 
 ##Função para atirar
 def shootPlayer():
@@ -56,6 +97,7 @@ def shootPlayer():
     if timer - last_bullet[0] > cooldown:
         bullets_player.append([player["pos"]["x"], player["pos"]["y"] - (player['size'][1] // 2)])
         last_bullet[0] = timer
+    return
 
 ## Função para movimentação das balas
 def bulletMove():
@@ -69,6 +111,7 @@ def bulletMove():
                 rm_bullet = i
         if rm_bullet > -1:
             del bullets_player[rm_bullet]
+    return
 
 ## Função para criar os inimigos
 def createEnemies(enemyNumber):
@@ -81,6 +124,7 @@ def createEnemies(enemyNumber):
             new_y = last_enemy[1] + enemies['size'][1] + 10
         enemies["pos"][e] = {"x": new_x, "y" : new_y}
         last_enemy = [new_x, new_y]
+    return
 
 ## Função para gerenciar os inimigos
 def drawEnemies(enemies):
@@ -97,6 +141,7 @@ def drawEnemies(enemies):
         del enemies['pos'][del_enemy]
     if rm_bullet != -1:
         bullets_player.remove(rm_bullet)
+    return
 
 def enemyAtk():
     rm_bullet = -1
@@ -114,6 +159,7 @@ def enemyAtk():
             rm_bullet = bullet
     if rm_bullet != -1:
         bullets_enemy.remove(rm_bullet)
+    return
 
 def collisionBullet():
     rm_bullet = []
@@ -127,6 +173,7 @@ def collisionBullet():
             bullets_enemy.remove(r)
         if r in bullets_player:
             bullets_player.remove(r)
+    return
 
 def createStructures():
     qtd_structures = randint(1,5)
@@ -138,6 +185,7 @@ def createStructures():
         new_structure = pygame.Rect(xStructure_point, yStructure_point, structure_size, 10)
         structures.append(new_structure)
         xStructure_point += structure_size + btween_structures
+    return
 
 def structuresManage():
     for coords in structures:
@@ -156,9 +204,10 @@ def structuresManage():
             if coords.collidepoint(bullet[0] -5, bullet[1] -5) or coords.collidepoint(bullet[0] -5, bullet[1] +5) or coords.collidepoint(bullet[0] +5, bullet[1] -5) or coords.collidepoint(bullet[0] +5, bullet[1] +5):
                 rm_bullet = bullet
                 w_bullet = 2
+                print(player['pos']['rect'])
     if w_bullet == 2:
         bullets_player.remove(rm_bullet)
-
+    return
 
 pygame.init()
 display = pygame.display.set_mode((1280, 780))
@@ -174,6 +223,7 @@ player = {
     "size": [40, 40],
     "lives": 5
 }
+
 enemies = {
     "pos" : {}, 
     "size" : [20, 20]
@@ -205,6 +255,9 @@ while rodando:
     
     # Chama a função que gerencia os inimigos
     drawEnemies(enemies)
+    
+    player['rect'] = pygame.draw.polygon(display, "purple", [[player['pos']['x'], player['pos']['y']], [player['pos']['x'] + player['size'][0] // 2, player['pos']['y'] - player['size'][1]], [player['pos']['x'] + player['size'][0], player['pos']['y']]])
+    
     
     if player['lives'] > 0:
         #Movimentação do player
