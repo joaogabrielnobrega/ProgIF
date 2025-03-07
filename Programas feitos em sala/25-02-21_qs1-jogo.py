@@ -372,18 +372,12 @@ while rodando:
     background()
     
     if player['lives'] > 0:
-        # Chama a função que gerencia os inimigos
-        drawEnemies(enemies)
-        #Movimentação do player
-        playerControls()
-        ## Chama a função que gerencia as balas do player
-        bulletMove()
-        ## Chama função que gerencia as balas dos inimigos
-        enemyAtk()
-        ## Chama a função que verifica colisão entre as balas dos inimigos e player
-        collisionBullet()
-        ## Chama função que gerencia as estruturas
-        structuresManage()
+        drawEnemies(enemies) ## Chama a função que gerencia os inimigos
+        playerControls() ## Controles do jogador
+        bulletMove() ## Chama a função que gerencia as balas do player
+        enemyAtk() ## Chama função que gerencia as balas dos inimigos
+        collisionBullet()## Chama a função que verifica colisão entre as balas dos inimigos e player
+        structuresManage() ## Chama função que gerencia as estruturas
     else:
         # Reseta o jogo
         enemies['pos'] = {}
