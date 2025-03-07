@@ -8,11 +8,12 @@ from random import randint
 from functools import reduce
 
 ## EM TESTE
+#https://www.mathcentre.ac.uk/resources/uploaded/mc-ty-scalarprod-2009-1.pdf
+#https://stackoverflow.com/questions/10002918/what-is-the-need-for-normalizing-a-vector
 #https://stackoverflow.com/questions/64095396/detecting-collisions-between-polygons-and-rectangles-in-pygame
 #https://stackoverflow.com/questions/59553156/pygame-detecting-collision-of-a-rotating-rectangle/59553589#59553589
-#https://www.mathcentre.ac.uk/resources/uploaded/mc-ty-scalarprod-2009-1.pdf
 #https://stackoverflow.com/questions/56312503/problem-with-calculating-line-intersections/56312654#56312654
-#https://stackoverflow.com/questions/10002918/what-is-the-need-for-normalizing-a-vector
+
 ## Função para detectar colisão entre linhas
 def collisionLineLine(l1_p1, l1_p2, l2_p1, l2_p2):
     
@@ -110,6 +111,7 @@ def playerControls():
         shootPlayer()
         tutorial[4] = True
     
+    # Mostra a quantidade de vidas do jogador na tela
     x = 20
     y = 20
     for i in range(player['lives']):
@@ -293,12 +295,13 @@ def background():
         pygame.draw.circle(display, "white", i, randint(1, 3))
 
 ## Função para desenhar os controles
-def displayText(y, text_list):
+def displayTutorial(y, text_list):
     for i in text_list:
         game_font.render_to(display, (40, y), i, "white")
         y += 24
     return
 
+## Função que faz a tela de gameover
 def gameover():
     gameover_font.render_to(display, (display.get_width() // 3, display.get_height() // 2), "GAME OVER", "white")
     retry_rect = pygame.draw.rect(display, "white", (display.get_width() // 2 - 35, display.get_height() // 2 + 100, 70, 30))
@@ -317,14 +320,15 @@ def gameover():
     return True
 
 pygame.init()
-display = pygame.display.set_mode((1280, 780))
-pygame.display.set_caption("Space Invaders")
+display = pygame.display.set_mode((1280, 780)) 
+pygame.display.set_caption("Space Invaders") # Muda o nome da janela para o nome do jogo
 clock = pygame.time.Clock()
 fps = 60
-heart = pygame.image.load("heart.png")
-heart = pygame.transform.scale(heart, (40, 40))
+heart = pygame.image.load("heart.png") # Variavel da imagem do coração
+heart = pygame.transform.scale(heart, (40, 40)) # Variavel da imagem do coração redimensionada
 rodando = True
 
+# Variaveis do jogador
 player = {
     "pos": {
         "x" : display.get_width() // 2, 
@@ -335,30 +339,27 @@ player = {
     "colliding": False
 }
 
+# Variaveis dos inimigos
 enemies = {
     "pos" : {}, 
     "size" : [20, 20]
 }
 
-# Variaveis para o texto que aparece no jogo
-game_font = pygame.freetype.SysFont('Comic Sans MS', 24)
-gameover_font = pygame.freetype.SysFont('Comic Sans MS', 70)
-controls_str = ["Controls:", "W - Move up", "S - Move down", "A - Move left", "D - Move rigth", "E - Shoot"]
-tutorial = [False, False, False, False, False]
+game_font = pygame.freetype.SysFont('Comic Sans MS', 24) # Variavel da fonte menor
+gameover_font = pygame.freetype.SysFont('Comic Sans MS', 70) # Variavel da fonte maior
+controls_str = ["Controls:", "W - Move up", "S - Move down", "A - Move left", "D - Move rigth", "E - Shoot"] # Variavel dos textos do tutorial
+tutorial = [False, False, False, False, False] # Variavel que guarda se as teclas ja foram precionadas 
 
-# Variaveis para gerenciar as balas
-bullets_enemy = []
-bullets_player = []
-last_bullet = [datetime.datetime.now()]
+bullets_enemy = [] # Lista que guardará as coordenadas das balas dos inimigos
+bullets_player = [] # Lista que guardará as coordenadas das balas do jogador
+last_bullet = [datetime.datetime.now()] # variavel que guardará a hora em que a ultima bala foi atirada pelo jogador
 
-# Chama a função para criar os inimigos
-createEnemies(40)
+structures = [] # Lista que guardará as coordenadas das estruturas
+stars = [] # Lista que guardará as coordenadas das estrelas
 
-# Crias as estruturas
-structures = []
-createStructures()
-stars = []
-createBackground()
+createEnemies(40) # Cria os inimigos
+createStructures() # Cria as estruturas
+createBackground() # Cria as estrelas
 
 while rodando:
     for event in pygame.event.get():
@@ -368,24 +369,19 @@ while rodando:
             rodando = False
     
     dt = clock.tick(fps) / 1000
-    
     background()
     
     if player['lives'] > 0:
         # Chama a função que gerencia os inimigos
         drawEnemies(enemies)
-        
         #Movimentação do player
         playerControls()
         ## Chama a função que gerencia as balas do player
         bulletMove()
-        
         ## Chama função que gerencia as balas dos inimigos
         enemyAtk()
-        
         ## Chama a função que verifica colisão entre as balas dos inimigos e player
         collisionBullet()
-        
         ## Chama função que gerencia as estruturas
         structuresManage()
     else:
@@ -397,7 +393,7 @@ while rodando:
         rodando = gameover()
     
     if not all(tutorial):
-        displayText(600, controls_str)
+        displayTutorial(600, controls_str)
     
     pygame.display.update()
     pygame.display.flip()
