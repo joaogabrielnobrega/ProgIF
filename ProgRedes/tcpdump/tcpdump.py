@@ -6,9 +6,9 @@ Desenvolva um programa que leia um arquivo capturado pelo tcpdump (alguns exempl
 disponibilizados no assignment do Github Classroom) e responda:
 a) Mostre o conteúdo de cada um dos campos nos headers dos pacotes IP capturados
 (vide https://pt.wikipedia.org/wiki/Protocolo_de_Internet);
-b) Em que momento inicia/termina a captura de pacotes?
-c) Qual o tamanho do maior TCP pacote capturado? ////
-d) Há pacotes que não foram salvos nas suas totalidades? Quantos?
+b) Em que momento inicia/termina a captura de pacotes?///--
+c) Qual o tamanho do maior TCP pacote capturado? ////--
+d) Há pacotes que não foram salvos nas suas totalidades? Quantos?////---
 e) Qual o tamanho médio dos pacotes UDP capturados? /////
 f) Qual o par de IP com maior tráfego entre eles? /////
 g) Com quantos outros IPs o IP da interface capturada interagiu?
@@ -30,6 +30,8 @@ arquivo inteiro
             capturar IP origem
             capturar IP dst
 '''
+
+from datetime import datetime, timezone
 
 def readFile(file: str):
     arch = open(file, 'rb')
@@ -68,6 +70,7 @@ def readPacketRecord(file: ):
     
 
 def readPacket(file: ,size: int):
+    split_packet = {}
     split_packet['frame header'] = file.read(14)
     #split_packet['ip header'] = file.read(24)
     split_packet['ver/hlen'] = file.read(1)
@@ -105,13 +108,15 @@ def treatingData(data: dict, file_header: dict):
     udp_packet_count = 0
     packets_unfool = 0
     packets_per_connection = {}
+    first_packet = 1000000000000000
+    last_packet = 0
     time_type = ''
     if file_header["magic number"] == "\xA1\xB2\xC3\xD4":
         time_type = True
     elif file_header["magic number"] == "\xA1\xB2\x3C\xD4":
         time_type = False
     for i in data:
-        if i[1] ['protocol'] == TCP and i[0]['captured_legth'] > tcp_packet_size:
+        if i[1]['protocol'] == '\x06' and i[0]['captured_legth'] > tcp_packet_size: 
             tcp_packet_size = i[0]['captured_legth']
         
         '''try:
@@ -120,20 +125,38 @@ def treatingData(data: dict, file_header: dict):
             packets_per_connection[f'{i[1]["ip origem"]}-{i[1]["ip destino"]'] = 1'''
             
         
-        if not packets_per_connection[f'{i[1]["ip origem"]}-{i[1]["ip destino"]']
-            packets_per_connection[f'{i[1]["ip origem"]}-{i[1]["ip destino"]'] = 1
+        if not packets_per_connection[f'{i[1]["ip origem"]}-{i[1]["ip destino"]}']:
+            if not packets_per_connection[f'{i[1]["ip destino"]}-{i[1]["ip origem"]}']:
+                packets_per_connection[f'{i[1]["ip destino"]}-{i[1]["ip origem"]}'] = 1
+            else:
+                packets_per_connection[f'{i[1]["ip destino"]}-{i[1]["ip origem"]}'] += 1
         else: 
-            packets_per_connection[f'{i[1]["ip origem"]}-{i[1]["ip destino"]'] += 1
+            packets_per_connection[f'{i[1]["ip origem"]}-{i[1]["ip destino"]}'] += 1
         
         
-        if i[1]['protocol'] == UDP:
+        if i[1]['protocol'] == '\x11':
             udp_packet_size += i[0]['captured_legth']
             udp_packet_count += 1
-        if i[0]['captured_legth'] != i[0]['original_length']:
-            packet_unfool += 1
-        if time_type:
-            time = f'{i[0]["timestamp"]} seconds {i[0]["timestamp_m"]} micro'
-        else:
-            time = f'{i[0]["timestamp"]} seconds {i[0]["timestamp_m"]} nano'
         
-            
+        if i[0]['captured_legth'] < i[0]['original_length']:
+            packet_unfool += 1
+        
+        if time_type:
+            time = int(i[0]["timestamp"]) + (int(i[0]["timestamp_m"]}) / 1000000) #micro
+        else:
+            time = int(i[0]["timestamp"]) + (int(i[0]["timestamp_m"]}) / 1000000000) #nano
+        if time < first_packet:
+            first_packet = time
+        if time > last_packet:
+            last_packet = time
+    
+    start_of_capture = datetime.fromtimestamp(first_packet, timezone.utc)
+    end_of_capture = datetime.fromtimestamp(last_packet, timezone.utc)
+    
+    most_packets = ['', 0]
+    
+    for i, b in packets_per_connection.items:
+        if b > most_packets[1]:
+            most_packets = [i,b]
+    
+    return
