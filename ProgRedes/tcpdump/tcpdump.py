@@ -29,6 +29,10 @@ arquivo inteiro
             capturar tamanho original do pacote
             capturar IP origem
             capturar IP dst
+
+Big-endian: The magic number is 0xa1b2c3d4
+Little-endian: The magic number is 0xd4c3b2a1
+
 '''
 
 from datetime import datetime, timezone
@@ -86,7 +90,6 @@ def readPacket(file, size: int):
     split_packet['ip origem'] = file.read(4)
     split_packet['ip destino'] = file.read(4)
     split_packet['options'] = file.read(4)
-    print(size)
     packet = file.read(size - 38)
     '''split_packet = {}
     split_packet['frame header'] = packet[14]
@@ -109,11 +112,13 @@ def treatingData(data: dict, file_header: dict):
     tcp_packet_size = 0
     udp_packet_size = 0
     udp_packet_count = 0
+    medium_udp_packet = 0
     packets_unfool = 0
     packets_per_connection = {}
     first_packet = 1000000000000000
     last_packet = 0
     time_type = ''
+    print(file_header["magic number"])
     if file_header["magic number"] == "\xd4\xc3\xb2\xa1":
         time_type = True
     elif file_header["magic number"] == "\xd4\x3c\xb2\xa1":
@@ -122,13 +127,23 @@ def treatingData(data: dict, file_header: dict):
         if i[1]['protocol'] == '\x06' and i[0]['captured_legth'] > tcp_packet_size: 
             tcp_packet_size = i[0]['captured_legth']
         
+        '''print(i[1]["ip origem"], type(i[1]["ip origem"]))
+        for f in i[1]["ip origem"]:
+            print(type(f))
+            print(int.from_bytes(f, "big"))'''  # passando uma string de 4 bytes em um lasso for cada byte se torna um inteiro
+        
+        ip_origem = '.'.join([str(a) for a in i[1]["ip origem"]])
+        ip_destino = '.'.join([str(a) for a in i[1]["ip destino"]])
+        
+        print(ip_destino, ip_origem)
+        
         try:
-            packets_per_connection[f'{i[1]["ip origem"]}-{i[1]["ip destino"]}'] += 1
+            packets_per_connection[f'{ip_origem}-{ip_destino}'] += 1
         except:
             try:
-                packets_per_connection[f'{i[1]["ip destino"]}-{i[1]["ip origem"]}'] += 1
+                packets_per_connection[f'{ip_destino}-{ip_origem}'] += 1
             except:
-                packets_per_connection[f'{i[1]["ip origem"]}-{i[1]["ip destino"]}'] = 1
+                packets_per_connection[f'{ip_destino}-{ip_origem}'] = 1
             
         
         '''if not packets_per_connection[f'{i[1]["ip origem"]}-{i[1]["ip destino"]}']:
@@ -141,34 +156,41 @@ def treatingData(data: dict, file_header: dict):
         
         
         if i[1]['protocol'] == '\x11':
-            udp_packet_size += int(i[0]['captured_legth'])
+            udp_packet_size += int.from_bytes(i[0]['captured_legth'], 'big')
             udp_packet_count += 1
         
         if i[0]['captured_legth'] < i[0]['original_legth']:
-            packet_unfool += 1
+            packets_unfool += 1
         
         if time_type:
+            print(i[0]["timestamp"], type(i[0]["timestamp"]))
             time = int.from_bytes(i[0]["timestamp"], "big", signed=True) + (int.from_bytes(i[0]["timestamp_m"], "big", signed=True) / 1000000) #micro
         else:
-            time = int.from_bytes(i[0]["timestamp"], "big", signed=True) + (int.from_bytes(i[0]["timestamp_m"], "big", signed=True) / 1000000000) #nano
+            print(i[0]["timestamp"], type(i[0]["timestamp"]))
+            print(i[0]["timestamp_m"], type(i[0]["timestamp_m"]))
+            time = i[0]["timestamp"] + (int.from_bytes(i[0]["timestamp_m"], "big", signed=True) / 1000000000) #nano
+        
         if time < first_packet:
             first_packet = time
         if time > last_packet:
             last_packet = time
+    
+    print(first_packet, last_packet)
     
     start_of_capture = datetime.fromtimestamp(first_packet, timezone.utc)
     end_of_capture = datetime.fromtimestamp(last_packet, timezone.utc)
     
     most_packets = ['', 0]
     
-    for i, b in packets_per_connection.items:
+    for i, b in packets_per_connection.items():
         if b > most_packets[1]:
             most_packets = [i,b]
     
-    medium_udp_packet = udp_packet_size / udp_packet_count
+    if udp_packet_count > 0:
+        medium_udp_packet = udp_packet_size / udp_packet_count
     
     
-    return start_of_capture, end_of_capture, tcp_packet_size, packet_unfool, medium_udp_packet, most_packets
+    return start_of_capture, end_of_capture, tcp_packet_size, packets_unfool, medium_udp_packet, most_packets
 
 def main():
     file = input("Arquivo a ser lido: ")
