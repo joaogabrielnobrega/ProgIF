@@ -1,5 +1,5 @@
 
-import os
+import socket, sys, ssl, os
 
 http_port = 80
 https_port = 443
@@ -14,43 +14,40 @@ get_template  = 'GET / HTTP/1.1\r\nHost: {}\r\nAccept: text/html\r\nConnection: 
 dir_app = os.path.dirname(__file__)
 
 
+# Processa um header e retorna o codigo de status da requisição
+def getStatusCode(header_reply: str) -> int:
+    status_line = header_reply.split('\r\n')[0]
+    if 'HTTP/' in status_line:
+        status_code = int(status_line.split(' ')[1])  
+    else: 
+        status_code = 0
+    return status_code
 
-'''
-    Biblioteca de funções a serem usadas pela aplicação
-'''
-import socket, ssl
-
-from constantes import *
-
-# --------------------------------------------------
-# Obtém o Status Code da Requisição
-def obterStatusCode(headerResposta: str) -> int:
-    strStatusLine = headerResposta.split('\r\n')[0]
-    intStatusCode = int(strStatusLine.split(' ')[1]) if 'HTTP/' in strStatusLine else 0
-    return intStatusCode
-
-# --------------------------------------------------
-# Extrai informações do HEADER
-def extrairHeaders(headerResposta: str) -> tuple:
-    strNovoHost = next((line[9:].strip() for line in headerResposta.split('\r\n') 
-                      if line.lower().startswith('location:')), None)
+# Processa o header e extrai o tamanho do conteudo e para qual host o redirecionamento aponta
+def processHeaders(header_reply: str) -> tuple:
+    header_lines = header_reply.split('\r\n')
+    host = []
+    length = []
+    for line in header_lines:
+        if line.lower().startwith('location:'):
+            host.append(line[9:].strip())
+        if line.lower().startwith('content-length:'):
+            length.append(line[15:].strip())
     
-    intTamanhoConteudo = int(next((line[15:].strip() for line in headerResposta.split('\r\n') 
-                                 if line.lower().startswith('content-length:')), 0))
+    new_host = next(host, None)
+    content_length = int(next(length, 0))
     
-    return (strNovoHost, intTamanhoConteudo)
+    return (new_host, content_length)
 
-# --------------------------------------------------
-# Cria um SOCKET SSL
-def criarSocketSSL(host: str) -> socket:
+# Cria um socket SSL
+def createSSLSocket(host: str) -> socket:
     context = ssl.create_default_context()
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ssl_sock = context.wrap_socket(sock, server_hostname=host)
     return ssl_sock
 
-# --------------------------------------------------
-# Recebe a resposta HTTP completa
-def obterFullResponse(sock: socket) -> str:
+# Recebe a respota a uma requisição
+def getFullReply(sock: socket) -> str:
     data = b''
     while True:
         part = sock.recv(BUFFER_SIZE)
@@ -58,27 +55,14 @@ def obterFullResponse(sock: socket) -> str:
         data += part
     return data.decode(CODE_PAGE, errors='ignore')
 
-# --------------------------------------------------
-# Cria um diretório com o nome do host se não existir
-def criarDiretorioHost(host: str) -> str:
-    host_clean = host.replace('http://', '').replace('https://', '').split('/')[0]
-    host_clean = host_clean.split(':')[0]
-    
-    dir_host = os.path.join(DIR_APP, host_clean)
+
+# Cria um diretório com o nome do host se não existir, para informações relacionadas
+def makeHostDir(host: str) -> str:
+    dir_host = os.path.join(DIR_APP, host)
     if not os.path.exists(dir_host):
         os.makedirs(dir_host)
     return dir_host
 
-
-
-
-'''
-    Função principal da aplicação
-'''
-import socket, sys, os
-
-from constantes import *
-from lib_funcoes import *
 
 # --------------------------------------------------
 def main():
@@ -100,7 +84,7 @@ def main():
         file_name = url_content[-1]
     
     #Cria diretorio relacionado a conexão
-    dir_host = criarDiretorioHost(host)
+    dir_host = makeHostDir(host)
 
     #Realiza conexão e requisição get via http
     if http:
@@ -110,7 +94,7 @@ def main():
             sock_tcp.connect((url, http_port))
 
             sock_tcp.sendall(get_template.format(url).encode(page_code))
-            reply_get = obterFullResponse(sock_tcp)
+            reply_get = getFullReply(sock_tcp)
             sock_tcp.close()
             
             if '\r\n\r\n' in full_response:
@@ -126,6 +110,13 @@ def main():
 
             with open(os.path.join(dir_host, f'conteudo_porta_{http_port}.txt'), 'w', encoding=CODE_PAGE) as f:
                 f.write(content)
+
+        except Exception as e:
+            sys.exit(f'\nERRO ----- {type(e).__name__}\n{str(e)}')
+        
+        finally:
+            if 'sock_tcp' in locals():
+                sock_tcp.close()
     
     #Realiza conexão e requisição get via https
     if https:
@@ -133,12 +124,12 @@ def main():
             sock_tcp = socket.socket(sock)
             
             # Cria novo socket SSL
-            sock_tcp = criarSocketSSL(new_host)
+            sock_tcp = createSSLSocket(new_host)
             sock_tcp.connect((url, https_port))
         
         
             sock_tcp.sendall(get_template.format(url).encode(page_code))
-            reply_get = obterFullResponse(sock_tcp)
+            reply_get = getFullReply(sock_tcp)
         
         
             if '\r\n\r\n' in full_response:
@@ -157,82 +148,10 @@ def main():
         
             with open(os.path.join(dir_host, f'conteudo_porta_{https_port}.txt'), 'w', encoding=CODE_PAGE) as f:
                 f.write(content)
-
-
-
-    try:
-        # Primeiro tentamos HTTP na porta 80
-        sockTCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #sockTCP.settimeout(10)
-        sockTCP.connect((strHost, PORT_HTTP))
         
-        # Requisita o Header
-        sockTCP.sendall(REQ_HEAD_TEMPLATE.format(strHost).encode(CODE_PAGE))
-        strRespHeader = obterFullResponse(sockTCP)
-        sockTCP.close()
+        except Exception as e:
+            sys.exit(f'\nERRO ----- {type(e).__name__}\n{str(e)}')
         
-        # Obtém informações do cabeçalho
-        intStatusCode = obterStatusCode(strRespHeader)
-        strNewHost, _ = extrairHeaders(strRespHeader)
-        
-        # Salvando o Header da Requisição na porta 80
-        with open(os.path.join(dir_host, 'header_porta_80.txt'), 'w', encoding=CODE_PAGE) as f:
-            f.write(strRespHeader)
-        
-        # Se houver redirecionamento para HTTPS
-        if 300 <= intStatusCode < 400 and strNewHost:
-            new_host = strNewHost.split('//')[-1].split('/')[0]
-            
-            # Cria novo socket SSL
-            sockTCP = criarSocketSSL(new_host)
-            #sockTCP.settimeout(10)
-            sockTCP.connect((new_host, PORT_HTTPS))
-            
-            # Envia requisição GET para obter conteúdo completo
-            sockTCP.sendall(REQ_GET_TEMPLATE.format(new_host).encode(CODE_PAGE))
-            full_response = obterFullResponse(sockTCP)
-            
-            # Separa headers do conteúdo
-            if '\r\n\r\n' in full_response:
-                strRespHeaders, strContent = full_response.split('\r\n\r\n', 1)
-            else:
-                strRespHeaders, strContent = full_response, ''
-            
-            # Salvando o Header da nova porta
-            with open(os.path.join(dir_host, f'header_porta_{PORT_HTTPS}.txt'), 'w', encoding=CODE_PAGE) as f:
-                f.write(strRespHeaders)
-            
-            # Exibe informações
-            print(f'\nRedirecionado para............: {new_host}')
-            print(f'Socket conectado..............: Porta {PORT_HTTPS}')
-            print(f'Tamanho do conteúdo...........: {len(strContent)} bytes')
-            
-            # Salva o conteúdo
-            with open(os.path.join(dir_host, f'conteudo_porta_{PORT_HTTPS}.txt'), 'w', encoding=CODE_PAGE) as f:
-                f.write(strContent)
-        else:
-            # Se não houve redirecionamento, faz GET na porta 80
-            sockTCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            #sockTCP.settimeout(10)
-            sockTCP.connect((strHost, PORT_HTTP))
-            sockTCP.sendall(REQ_GET_TEMPLATE.format(strHost).encode(CODE_PAGE))
-            full_response = obterFullResponse(sockTCP)
-            
-            if '\r\n\r\n' in full_response:
-                strRespHeaders, strContent = full_response.split('\r\n\r\n', 1)
-            else:
-                strRespHeaders, strContent = full_response, ''
-            
-            print(f'\nSocket conectado..............: Porta {PORT_HTTP}')
-            print(f'Tamanho do conteúdo..........: {len(strContent)} bytes')
-            
-            with open(os.path.join(dir_host, f'conteudo_porta_{PORT_HTTP}.txt'), 'w', encoding=CODE_PAGE) as f:
-                f.write(strContent)
-              
-    except Exception as e:
-        sys.exit(f'\nERRO.... {type(e).__name__}\n{str(e)}')
-    finally:
-        if 'sockTCP' in locals(): 
-            sockTCP.close()
-
-
+        finally:
+            if 'sock_tcp' in locals():
+                sock_tcp.close()
